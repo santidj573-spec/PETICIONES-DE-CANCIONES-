@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petición de Canciones</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+        h1, h2 {
+            color: #1e3a8a;
+            text-align: center;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        label {
+            font-weight: bold;
+        }
+        input[type="text"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .tip-info {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-top: -5px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+        button {
+            background-color: #3b82f6;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #2563eb;
+        }
+        #requests-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .request-item {
+            background-color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .request-item span {
+            font-size: 1.1em;
+        }
+        .social-box {
+            background-color: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .social-box p {
+            margin: 0;
+            font-size: 1.1em;
+            color: #475569;
+        }
+        .social-box a {
+            font-weight: bold;
+            color: #3b82f6;
+            text-decoration: none;
+        }
+        .social-box a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Petición de Canciones 🎶</h1>
+        <p>¡Pide tu canción favorita para que sea añadida a nuestra lista!</p>
+
+        <form id="song-form">
+            <label for="song-title">Título de la Canción:</label>
+            <input type="text" id="song-title" name="song-title" required>
+
+            <label for="artist-name">Artista o Grupo:</label>
+            <input type="text" id="artist-name" name="artist-name" required>
+
+            <div class="tip-info">
+                La propina es voluntaria: Nequi 3166105728
+            </div>
+
+            <button type="submit">Añadir a la lista</button>
+        </form>
+
+        <h2>Lista de Canciones Pedidas</h2>
+        <ul id="requests-list">
+        </ul>
+        
+        <div class="social-box">
+            <p>Redes sociales: <a href="https://www.instagram.com/SANTI_DJ_OF" target="_blank">@SANTI_DJ_OF</a></p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('song-form');
+            const requestsList = document.getElementById('requests-list');
+            const STORAGE_KEY_SONGS = 'songRequests';
+            const STORAGE_KEY_TIMESTAMP = 'lastResetTimestamp';
+            const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
+
+            function loadAndCheckRequests() {
+                const lastResetTimestamp = parseInt(localStorage.getItem(STORAGE_KEY_TIMESTAMP) || '0', 10);
+                const currentTime = new Date().getTime();
+
+                if (currentTime - lastResetTimestamp >= ONE_DAY_IN_MS) {
+                    localStorage.removeItem(STORAGE_KEY_SONGS);
+                    requestsList.innerHTML = '';
+                    localStorage.setItem(STORAGE_KEY_TIMESTAMP, currentTime.toString());
+                } else {
+                    const savedRequests = JSON.parse(localStorage.getItem(STORAGE_KEY_SONGS)) || [];
+                    savedRequests.forEach(request => addRequestToList(request.title, request.artist));
+                }
+            }
+
+            loadAndCheckRequests();
+
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+
+                const songTitle = document.getElementById('song-title').value;
+                const artistName = document.getElementById('artist-name').value;
+
+                if (songTitle && artistName) {
+                    addRequestToList(songTitle, artistName);
+                    saveRequest(songTitle, artistName);
+                    form.reset();
+                }
+            });
+
+            function addRequestToList(title, artist) {
+                const listItem = document.createElement('li');
+                listItem.className = 'request-item';
+                listItem.innerHTML = `<span>🎵 <strong>${title}</strong> - ${artist}</span>`;
+                requestsList.appendChild(listItem);
+            }
+
+            function saveRequest(title, artist) {
+                const requests = JSON.parse(localStorage.getItem(STORAGE_KEY_SONGS)) || [];
+                requests.push({ title, artist });
+                localStorage.setItem(STORAGE_KEY_SONGS, JSON.stringify(requests));
+            }
+        });
+    </script>
+</body>
+</html>
