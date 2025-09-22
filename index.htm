@@ -133,29 +133,34 @@
         </div>
     </div>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    
     <script>
+        const firebaseConfig = {
+          apiKey: "AIzaSyCefMkJLoZBokjRth93E1DYlEGpBKjKIOw",
+          authDomain: "peticion-de-ca.firebaseapp.com",
+          databaseURL: "https://peticion-de-ca-default-rtdb.firebaseio.com",
+          projectId: "peticion-de-ca",
+          storageBucket: "peticion-de-ca.firebasestorage.app",
+          messagingSenderId: "857839610988",
+          appId: "1:857839610988:web:06910d12d6fb364602fc49"
+        };
+        
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const songsRef = database.ref('songs');
+
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.getElementById('song-form');
             const requestsList = document.getElementById('requests-list');
-            const STORAGE_KEY_SONGS = 'songRequests';
-            const STORAGE_KEY_TIMESTAMP = 'lastResetTimestamp';
-            const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
 
-            function loadAndCheckRequests() {
-                const lastResetTimestamp = parseInt(localStorage.getItem(STORAGE_KEY_TIMESTAMP) || '0', 10);
-                const currentTime = new Date().getTime();
-
-                if (currentTime - lastResetTimestamp >= ONE_DAY_IN_MS) {
-                    localStorage.removeItem(STORAGE_KEY_SONGS);
-                    requestsList.innerHTML = '';
-                    localStorage.setItem(STORAGE_KEY_TIMESTAMP, currentTime.toString());
-                } else {
-                    const savedRequests = JSON.parse(localStorage.getItem(STORAGE_KEY_SONGS)) || [];
-                    savedRequests.forEach(request => addRequestToList(request.title, request.artist));
-                }
-            }
-
-            loadAndCheckRequests();
+            songsRef.on('child_added', (snapshot) => {
+                const song = snapshot.val();
+                addRequestToList(song.title, song.artist);
+            });
 
             form.addEventListener('submit', (event) => {
                 event.preventDefault();
@@ -164,8 +169,12 @@
                 const artistName = document.getElementById('artist-name').value;
 
                 if (songTitle && artistName) {
-                    addRequestToList(songTitle, artistName);
-                    saveRequest(songTitle, artistName);
+                    songsRef.push({
+                        title: songTitle,
+                        artist: artistName,
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                    });
+
                     form.reset();
                 }
             });
@@ -175,12 +184,6 @@
                 listItem.className = 'request-item';
                 listItem.innerHTML = `<span>🎵 <strong>${title}</strong> - ${artist}</span>`;
                 requestsList.appendChild(listItem);
-            }
-
-            function saveRequest(title, artist) {
-                const requests = JSON.parse(localStorage.getItem(STORAGE_KEY_SONGS)) || [];
-                requests.push({ title, artist });
-                localStorage.setItem(STORAGE_KEY_SONGS, JSON.stringify(requests));
             }
         });
     </script>
